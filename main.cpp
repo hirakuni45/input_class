@@ -524,11 +524,12 @@ int main(int argc, char* argv[])
 	}
 #endif
 
-
+	std::cout << std::endl;
+	std::cout << "input class Version: " << input::VERSION << std::endl;
 	if(pass >= 28) {
-		std::cout << std::endl;
 		std::cout << "All Pass: " << pass << std::endl;
 	} else {
+		std::cout << "Pass for " << pass << std::endl;
 		return -1;
 	}
 }
