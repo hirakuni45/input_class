@@ -1,4 +1,5 @@
-scanf に似た仕様で数値変換を実現する C++ クラス
+input クラス   
+scanf に似た仕様で文字列から数値へ変換する C++ クラス
 =========
 
 ## 概要
@@ -28,11 +29,9 @@ scanf に似た仕様で数値変換を実現する C++ クラス
 ---
 ## 仕様
 
- - 基本的な仕様
+ - 基本的な仕様   
    ２進数、８進数、１０進数、１６進数、浮動小数点、文字などを受け取る事が出来ます。   
-   
  - 名前空間は「utils」です。
-   
  - 文字列の受け取りは、ファンクタを定義して、テンプレートパラメーターとします。   
    ※標準的なファンクタ「def_chainp」クラスが定義されており、以下のように   
    typedef されています。   
@@ -41,7 +40,9 @@ scanf に似た仕様で数値変換を実現する C++ クラス
    	typedef basic_input<def_chainp> input;
 ```
 
-標準のファンクタは、標準入力から文字列を受け取りますが、キャラクター型ポインター   
+※「def_chainp」クラスも、「input.hpp」に含まれています。
+
+標準のファンクタは、標準入力から文字を受け取りますが、キャラクター型ポインター   
 を定義する事ができ、「sscanf」のように機能します。
    
 組み込みマイコンで使う事を考えて、エラーに関する処理では、「例外」を送出しません。
@@ -49,8 +50,8 @@ scanf に似た仕様で数値変換を実現する C++ クラス
 
 - 一般的に、例外を使うと多くのメモリを消費します。
 - 例外を使った場合、エラーが発生して、正しい受取先が無い場合、致命的な問題を引き起こします。
-- 複数の入力で、エラーが同時に発生すると、最後のエラーが残ります。
-- 非常に単純な正規表現のみを受け入れ、独自の仕様として拡張してあります。   
+- 複数の変換で、エラーが同時に発生すると、最後のエラーが残ります。
+- 複数の分離キャラクターを扱える正規表現があります。   
 - %b ---> ２進の数値
 - %o ---> ８進の数値
 - %d ---> １０進の数値
@@ -62,10 +63,23 @@ scanf に似た仕様で数値変換を実現する C++ クラス
 
 ※ %c は、半角文字のみ対応
 
-- %、[、]、などの特殊文字を、セパレーターとして使う場合は、「バックスラッシュ」を使う。
+- %、[、]、などの特殊文字を、分離キャラクターとして使う場合は、「バックスラッシュ」を使う。
 
 ---
 ## 使い方
+
+### input.hpp をインクルードします。
+
+```
+#include "input.hpp"
+```
+
+※エクスポーネント算術に「std::pow」関数を利用する為、算術ライブラリのリンクが必要です。   
+※全ての機能を使うのに必要なヘッダーは「input.hpp」のみです。
+
+### 名前空間は「utils」です。
+
+### サンプル
 
 - 標準入力から、変数「a」に１０進数を受け取ります。   
 ※標準入力から受け取る場合、入力の終端は、'\n'（改行）とします。   
@@ -75,7 +89,7 @@ scanf に似た仕様で数値変換を実現する C++ クラス
    utils::input("%d") % a;
 ```
 
-- 以下のように変換ステートを受け取る事が出来るので、変換出来ない場合を検出できます。   
+- 以下のように変換ステートを受け取る事が出来るので、変換に失敗した場合を検出できます。   
 
 ```
    int a;
@@ -86,7 +100,7 @@ scanf に似た仕様で数値変換を実現する C++ クラス
    }
 ```
 
-- 受け取り時、どんなエラーがあったのかを判断したい場合、以下のようにエラー種別を取得   
+- 受け取り時、どんなエラーがあったのかを判別したい場合、以下のようにエラー種別を取得   
   する事ができます。
 
 ```
@@ -99,12 +113,12 @@ scanf に似た仕様で数値変換を実現する C++ クラス
    }
 ```
    
-- エラー種別は：
+- エラー種別は enum class で定義されます。
 
 ```
     none,            ///< エラー無し
     cha_sets,        ///< 文字セットの不一致
-    partition,       ///< 仕切りキャラクターの不一致
+    partition,       ///< 分離キャラクターの不一致
     input_type,      ///< 無効な入力タイプ
     not_integer,     ///< 整数型の不一致
     different_sign,  ///< 符号の不一致
@@ -122,7 +136,7 @@ scanf に似た仕様で数値変換を実現する C++ クラス
    utils::input("%d", inp) % a;
 ```
 
-- 特殊文字「%, [, ]」をセパレーターとして使う場合、「\」（バックスラッシュ）で制御を除外する。
+- 特殊文字「%, [, ]」を分離キャラクターとして使う場合、「\」（バックスラッシュ）で除外します。
 ※「\」を文字列に１文字含める場合、「\\」とします。
 ```
     static const char* inp = { "123%456[789]5678" };
@@ -156,11 +170,12 @@ scanf に似た仕様で数値変換を実現する C++ クラス
         std::cout << "  Scan NG!" << std::endl;
     }
 ```
+
 ---
 ## 拡張機能、「%a」オート
 
 接頭子として、「b,0b」二進数、「o,0o」八進数、「x,0x」１６進数、「なし」１０進数、を受け付ける機能。
-※整数のみ
+※整数のみで、浮動小数点は受け取れません。
 ※先頭の「0」は省略可能
 
 ```
@@ -178,15 +193,71 @@ scanf に似た仕様で数値変換を実現する C++ クラス
 ```
 
 ---
-## オーバーフローエラーの挙動
+## 変換エラーが発生した場合：
 
-浮動小数点の小数点以下の場合、桁あふれ以降の数値は無視され、オーバーフローエラーは返しません。
-それ以外の場合（実数部）では、「utils::input::error::overflow」がセットされます。
+- 変換エラーが発生した場合、参照へは、結果を返さず、破棄されます。
+
+```
+    int a = -1;
+    input("%d", "1O5") % a;
+```
+
+上記のように、変換に失敗した（文字の O が含まれる）場合は、初期化の値「-1」が保持されます。
+
+---
+## オーバーフローエラーの挙動：
+
+- 浮動小数点の小数点以下は、桁あふれ以降の数値は無視され、オーバーフローエラーは返しません。
+- 実数部では、「utils::input::error::overflow」がセットされます。   
 ※オーバーフローエラーの場合、オペレーターで指定された参照へは、オーバーフローする前の値を返します。
-  
+
+---
+## プロジェクト（全体テスト）
+
+input クラスは、全体テストと共に提供されます。
+
+```
+make
+```
+で全体テストがコンパイルされます。
+
+```
+make run
+```
+
+全体テストが走り、全てのテストが通過すると、正常終了となります。   
+※テストに失敗すると、-1 を返します。
+
 ---
       
 License
 ----
 
-MIT
+[MIT](LICENSE)
+
+```
+Copyright (c) 2020, Hiramatsu Kunihito
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+* Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+* Neither the name of the <organization> nor the　names of its contributors
+  may be used to endorse or promote products derived from this software
+  without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
