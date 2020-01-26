@@ -110,6 +110,8 @@ namespace utils {
 	class basic_input {
 	public:
 
+		static const uint16_t VERSION = 100;
+
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
 			@brief  エラー種別
@@ -118,7 +120,7 @@ namespace utils {
 		enum class error : uint8_t {
 			none,			///< エラー無し
 			cha_sets,		///< 文字セットの不一致
-			partition,		///< 仕切りキャラクターの不一致
+			partition,		///< 分離キャラクターの不一致
 			input_type,		///< 無効な入力タイプ
 			not_integer,	///< 整数型の不一致
 			different_sign,	///< 符号の不一致
