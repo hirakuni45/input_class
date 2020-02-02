@@ -26,7 +26,8 @@
 			+ 2020/01/15 10:03- std::string 型を定義 @n
 			+ 2020/01/24 15:15- 浮動小数点オーバーフローした場合のリミッター追加 @n
 			+ 2020/01/24 15:50- 整数変換でオーバーフローが発生したらエラーとする @n
-			+ 2020/01/25 17:33- 特殊制御文字を除外する「\」（バックスラッシュ）機能
+			+ 2020/01/25 17:33- 特殊制御文字を除外する「\」（バックスラッシュ）機能 @n
+			+ 2020/02/02 19:47- enum error など共有定義を継承
     @author 平松邦仁 (hira@rvf-rc45.net)
 	@copyright	Copyright (C) 2017, 2020 Kunihito Hiramatsu @n
 				Released under the MIT license @n
@@ -102,15 +103,13 @@ namespace utils {
 
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 	/*!
-		@brief  汎用入力クラス
-		@param[in]	INP	文字入力クラス
+		@brief  汎用入力クラス・ベースクラス
 	*/
 	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-	template <class INP>
-	class basic_input {
+	class base_input {
 	public:
 
-		static const uint16_t VERSION = 100;
+		static const uint16_t VERSION = 101;
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
@@ -129,8 +128,18 @@ namespace utils {
 			terminate,		///< 終端文字の不一致
 			overflow,		///< オーバーフロー
 		};
+	};
 
-	private:
+
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	/*!
+		@brief  汎用入力クラス
+		@param[in]	INP	文字入力クラス
+	*/
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	template <class INP>
+	class basic_input : public base_input {
+
 		const char*	form_;
 
 		INP			inp_;
