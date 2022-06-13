@@ -27,9 +27,10 @@
 			+ 2020/01/24 15:15- 浮動小数点オーバーフローした場合のリミッター追加 @n
 			+ 2020/01/24 15:50- 整数変換でオーバーフローが発生したらエラーとする @n
 			+ 2020/01/25 17:33- 特殊制御文字を除外する「\」（バックスラッシュ）機能 @n
-			+ 2020/02/02 19:47- enum error など共有定義を継承
+			+ 2020/02/02 19:47- enum error など共有定義を継承 @n
+			! 2022/06/13 15:15- static const を static constexpr へ変更
     @author 平松邦仁 (hira@rvf-rc45.net)
-	@copyright	Copyright (C) 2017, 2020 Kunihito Hiramatsu @n
+	@copyright	Copyright (C) 2017, 2022 Kunihito Hiramatsu @n
 				Released under the MIT license @n
 				https://github.com/hirakuni45/RX/blob/master/LICENSE
 */
@@ -109,7 +110,7 @@ namespace utils {
 	class base_input {
 	public:
 
-		static const uint16_t VERSION = 101;
+		static constexpr uint16_t VERSION = 101;
 
 		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 		/*!
