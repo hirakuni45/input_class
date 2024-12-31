@@ -1,97 +1,92 @@
-input クラス   
-scanf に似た仕様で文字列から数値へ変換する C++ クラス
+input class  
+C++ class for converting strings to numbers with a specification similar to scanf
 =========
 
-## 概要
+## Overview
 
- C++ では、C 言語で一般的な可変引数を扱う関数は使わない文化があります。   
+ C++ has a culture of not using functions with variable arguments, which is common in the C language.   
    
- 一番の問題は、引数の引渡しはスタックを経由する点、又、スタックに引数が何個格納   
- されているのか判らない点です、これによりスタックをオーバーロードさせ、システム   
- に悪影響を与える事が出来てしまいます。   
+ The main problem is that arguments are passed through the stack, and it is not known how many arguments are stored on the stack.   
+ This can overload the stack and have a negative impact on the system.   
+ This can overload the stack and adversely affect the system.   
    
- 代表的な実装は「printf」関数です。   
- コンパイラはフォーマット文を解析して、引数の整合性をチェックしますが、完全には   
- チェックできません。   
- 一方、「printf」は優れた柔軟性をもたらし、文字、数値を扱う事をたやすくします。   
+ A typical implementation is the “printf/scanf” function.   
+ The compiler parses the format statement and checks the integrity of the arguments, but it cannot check them completely.   
+ but not completely.   
+ On the other hand, “printf/scanf” provides great flexibility and makes it easy to work with characters and numbers.   
    
- boost には、printf の柔軟性と、安全性を考慮した、format.hpp があります。   
- ※「%」オペレーターのオーバーロード機構を利用して、複数の引数を受け取る事ができます。   
- ※boost::format は優れた実装ですが、iostream に依存していて組み込みマイコンでは問題があります。    
- ※iostream を取り込むと、容量が肥大化します。
-
- その為、組み込みマイコン向けの軽量な「format.hpp」を実装しています。   
-   
- 同じように、printf とは逆の動作をする scanf も安全性においては printf と同じ問題   
- を抱えています。   
- そこで、format.hpp の仕組みをまねて、scanf に代わる input クラスを実装しました。   
+ Boost has a format.hpp file that takes into account the flexibility and safety of printf.   
+ It can accept multiple arguments by using the overloading mechanism of the “%” operator.   
+ boost::format is an excellent implementation, but it depends on iostream, which is problematic for embedded microcontrollers.    
+ Incorporating iostreams bloats the capacity of the system.   
+  
+ Similarly, scanf, which does the opposite of printf, has the same safety issues as printf.   
+ It has the same problem of safety as printf.   
+ Therefore, we have implemented an input class that inherits from format.hpp and replaces scanf.   
    
 ---
-## 仕様
 
- - 基本的な仕様   
-   ２進数、８進数、１０進数、１６進数、浮動小数点、文字などを受け取る事が出来ます。   
- - 名前空間は「utils」です。
- - 文字列の受け取りは、ファンクタを定義して、テンプレートパラメーターとします。   
-   ※標準的なファンクタ「def_chainp」クラスが定義されており、以下のように   
-   typedef されています。   
+## Specifications
 
-```
+- Can accept binary, octal, decimal, hexadecimal, floating point, characters, etc.
+- The namespace is “utils”.
+- To receive strings, define a functor and use it as a template parameter
+- A standard functor “def_chainp” class is defined and typedefed as follows
+
+```C++
    	typedef basic_input<def_chainp> input;
 ```
 
-※「def_chainp」クラスも、「input.hpp」に含まれています。
+-The “def_chainp” class is also included in “input.hpp”.
 
-標準のファンクタは、標準入力から文字を受け取りますが、キャラクター型ポインター   
-を定義する事ができ、「sscanf」のように機能します。
+The standard functor accepts characters from standard input, but a character type pointer   
+can be defined and functions like “sscanf”.   
    
-組み込みマイコンで使う事を考えて、エラーに関する処理では、「例外」を送出しません。
-入力変換時に起こったエラーは、エラー種別として取得する事ができます。
+In consideration of its use in an embedded microcontroller, it does not send an “exception” when handling errors.   
+Errors that occur during input conversion can be retrieved as error types.   
 
-- 一般的に、例外を使うと多くのメモリを消費します。
-- 例外を使った場合、エラーが発生して、正しい受取先が無い場合、致命的な問題を引き起こします。
-- 複数の変換で、エラーが同時に発生すると、最後のエラーが残ります。
-- 複数の分離キャラクターを扱える正規表現があります。   
-- %b ---> ２進の数値
-- %o ---> ８進の数値
-- %d ---> １０進の数値
-- %u ---> 符号無し１０進
-- %x ---> １６進の数値
-- %f ---> 浮動小数点数（float、double）
-- %c ---> １文字のキャラクター
-- %a ---> 自動、２進(bnnn)、８進(onnn)、１０進、１６進(xnnn)、を判別
-
-※ %c は、半角文字のみ対応
-
-- %、[、]、などの特殊文字を、分離キャラクターとして使う場合は、「バックスラッシュ」を使う。
+- In general, using exceptions consumes a lot of memory.
+- Using exceptions can be fatal if an error occurs and the correct recipient is not available.
+- If multiple conversions generate errors at the same time, the last error remains.
+- There are regular expressions that can handle multiple separated characters
+- %b ---> binary digit
+- %o ---> octal digit
+- %d ---> decimal digit
+- %u ---> Unsigned decimal (obsolete in v111, done in %d)
+- %x ---> hexadecimal digit
+- %f ---> floating point（float、double）
+- %c ---> One character character
+- %a ---> Auto, binary(bnnn), octal(onnn), decimal, hexadecimal(xnnn), floating point
+- %c supports only one-byte characters
+- Use “backslash” when using special characters such as '%', '[', ']', etc. as separating characters
 
 ---
-## 使い方
+## Usage
 
-### input.hpp をインクルードします。
+### Include input.hpp.
 
-```
+```C++
 #include "input.hpp"
 ```
 
-※エクスポーネント算術に「std::pow」関数を利用する為、算術ライブラリのリンクが必要です。   
-※全ての機能を使うのに必要なヘッダーは「input.hpp」のみです。
+- Link to the arithmetic library is required to use the “std::pow” function for component arithmetic.
+- Only “input.hpp” header is required to use all functions.
 
-### 名前空間は「utils」です。
+### The namespace is “utils”.
 
-### サンプル
+### Sample
 
-- 標準入力から、変数「a」に１０進数を受け取ります。   
-※標準入力から受け取る場合、入力の終端は、'\n'（改行）とします。   
+- Receives a decimal number from standard input into the variable “a”.
+- When receiving from standard input, terminate the input with '\n' (new line)
 
-```
+```C++
    int a;
    utils::input("%d") % a;
 ```
 
-- 以下のように変換ステートを受け取る事が出来るので、変換に失敗した場合を検出できます。   
+- You can detect conversion failures by receiving the conversion state as follows 
 
-```
+```C++
    int a;
    if((utils::input("%d") % a).state()) {
        // OK
@@ -100,10 +95,9 @@ scanf に似た仕様で文字列から数値へ変換する C++ クラス
    }
 ```
 
-- 受け取り時、どんなエラーがあったのかを判別したい場合、以下のようにエラー種別を取得   
-  する事ができます。
+- If you want to determine what kind of error was made upon receipt, you can retrieve the error type as follows
 
-```
+```C++
    int a;
    auto err = (utils::input("%d") % a).get_error();
    if(err == utils::input::error::none) {
@@ -113,36 +107,40 @@ scanf に似た仕様で文字列から数値へ変換する C++ クラス
    }
 ```
    
-- エラー種別は enum class で定義されます。
+- The error type is defined by the enum class
 
-```
-    none,            ///< エラー無し
-    cha_sets,        ///< 文字セットの不一致
-    partition,       ///< 分離キャラクターの不一致
-    input_type,      ///< 無効な入力タイプ
-    not_integer,     ///< 整数型の不一致
-    different_sign,  ///< 符号の不一致
-    sign_type,       ///< 符号無し整数にマイナス符号
-    not_float,       ///< 浮動小数点型の不一致
-    terminate,       ///< 終端文字の不一致
-    overflow,        ///< オーバーフロー    
+```C++
+  enum class error : uint8_t {
+none, ///< no error
+    cha_sets,		///< character set mismatch
+    partition,		///< mismatch of separated characters
+    input_type,		///< invalid input type
+    not_integer,	///< integer type mismatch
+    different_sign,	///< sign mismatch (obsolete in v111)
+    sign_type,		///< minus sign for unsigned integer
+    not_float,		///< mismatch of floating point type
+    terminate,		///< mismatch of terminating character
+    overflow,		///< overflow
+  };
 ```
    
-- 文字列から受け取る場合(sscanf 相当)は、以下のようにします。   
-※第二引数が省略された場合、上の例のように、標準入力となります。
-```
+- When receiving from a string (equivalent to sscanf), do the following
+- If the second argument is omitted, the standard input is used, as in the example above
+
+```C++
    int a;
    static const char* inp = { "1234" };
    utils::input("%d", inp) % a;
 ```
 
-- 特殊文字「%, [, ]」を分離キャラクターとして使う場合、「\」（バックスラッシュ）で除外します。
-※「\」を文字列に１文字含める場合、「\\」とします。
-```
+- When using the special character “%, [, ]” as a separator character, use “\” (backslash) to exclude it
+- “\” (backslash) to include “\” as a single character in a string
+
+```C++
     static const char* inp = { "123%456[789]5678" };
     int a[4] = { -1 };
     auto err = (input("%d\\%%d\\[%d\\]%d", inp) % a[0] % a[1] % a[2] % a[3]).get_error();
-    std::cout << "Test23, Special character separator as '" << inp << "': "
+    std::cout << "Special character separator as '" << inp << "': "
         << a[0] << ", " << a[1] << ", " << a[2] << ", " << a[3];
     if(err == input::error::none) {
 
@@ -150,13 +148,13 @@ scanf に似た仕様で文字列から数値へ変換する C++ クラス
 ```
 
 ---
-## 拡張機能、分離キャラクタ
+## Extensions, separator character
 
-数値ブロックを分離するキャラクターには、数値（１０進の場合 0 から 9）以外を指定が出来ます。
-さらに。「[」、「]」で囲まれた任意のキャラクターを指定出来ます。
-以下のサンプルでは、分離キャラクターとして、「 」（スペース）、「,」のどちらかを指定出来ます。
+The character separating a numeric block can be any non-numeric value (0 to 9 in decimal).   
+In addition, you can specify any character enclosed in “[”, “]”. Any character enclosed in “[” or “]” can be specified.   
+In the sample below, the separator character can be either “ ‘ (space) or ’,”.    
 
-```
+```C++
     int a = 0;
     uint32_t b = 0;
     int c = 0;
@@ -172,19 +170,19 @@ scanf に似た仕様で文字列から数値へ変換する C++ クラス
 ```
 
 ---
-## 拡張機能、「%a」オート
+## Extensions, “%a” auto
 
-接頭子として、「b,0b」二進数、「o,0o」八進数、「x,0x」１６進数、「なし」１０進数、を受け付ける機能。
-※整数のみで、浮動小数点は受け取れません。
-※先頭の「0」は省略可能
+- Ability to accept “b,0b” binary, “o,0o” octal, “x,0x” hexadecimal, “none” decimal/floating point as prefixes
+- Leading “0” can be omitted
 
-```
-    static const char* inp = { "100 0x9a 0b1101 0o775" };
+```C++
+    static const char* inp = { "100 0x9a 0b1101 0o775" 123.456 };
     int a[4] = { -1 };
-    auto n = (input("%a %a %a %a", inp) % a[0] % a[1] % a[2] % a[3]).num();
-    std::cout << "Test10, multi scan for 'auto': "
+	float b;
+    auto n = (input("%a %a %a %a %a", inp) % a[0] % a[1] % a[2] % a[3] % b).num();
+    std::cout << "Multi scan for 'auto': "
         << a[0] << ", " << a[1] << ", " << a[2] << ", " << a[3] << " (" << n << ")";
-    if(n == 4 && a[0] == 100 && a[1] == 0x9a && a[2] == 0b1101 && a[3] == 0775) {
+    if(n == 4 && a[0] == 100 && a[1] == 0x9a && a[2] == 0b1101 && a[3] == 0775 && b == 123.456f) {
         std::cout << "  Pass." << std::endl;
         ++pass;
     } else {
@@ -193,44 +191,49 @@ scanf に似た仕様で文字列から数値へ変換する C++ クラス
 ```
 
 ---
-## 変換エラーが発生した場合：
+## If a conversion error occurs:
 
-- 変換エラーが発生した場合、参照へは、結果を返さず、破棄されます。
+- If a conversion error occurs, no result is returned to the reference and it is discarded.
 
-```
+```C++
     int a = -1;
     input("%d", "1O5") % a;
 ```
 
-上記のように、変換に失敗した（文字の O が含まれる）場合は、初期化の値「-1」が保持されます。
+If the conversion fails (contains the letter O) as described above, the initialization value “-1” is retained.    
 
 ---
-## オーバーフローエラーの挙動：
 
-- 浮動小数点の小数点以下は、桁あふれ以降の数値は無視され、オーバーフローエラーは返しません。
-- 実数部では、「utils::input::error::overflow」がセットされます。   
-※オーバーフローエラーの場合、オペレーターで指定された参照へは、オーバーフローする前の値を返します。
+## Overflow error behavior:
+
+- For floating point decimals, numbers after the overflow are ignored and no overflow error is returned
+- For real numbers, “utils::input::error::overflow” is set
+- In case of an overflow error, the value before the overflow is returned to the reference specified by the operator.
 
 ---
-## プロジェクト（全体テスト）
 
-input クラスは、全体テストと共に提供されます。
+## Project (Overall Test)
 
-```
+The input class is provided with the overall test.   
+
+```sh
 make
 ```
-で全体テストがコンパイルされます。
 
-```
+The overall test is compiled in   
+
+```sh
 make run
 ```
 
-全体テストが走り、全てのテストが通過すると、正常終了となります。   
-※テストに失敗すると、-1 を返します。
+The overall test runs, and if all tests pass, the test ends normally.   
+If the test fails, -1 is returned.   
 
 ---
-      
-License
+
+Translated with DeepL.com (free version)
+
+License   
 ----
 
 [MIT](LICENSE)
